@@ -155,7 +155,7 @@ Setup
 
 1. Clone the repo
 
-bashgit clone https://github.com/YOUR-USERNAME/flaky-test-intelligence-platform.git
+bashgit clone https://github.com/saisathwik1729/flaky-test-intelligence-platform.git
 cd flaky-test-intelligence-platform
 
 2. Create database
