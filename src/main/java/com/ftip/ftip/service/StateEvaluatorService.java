@@ -25,6 +25,7 @@ public class StateEvaluatorService {
     private final TestIdentityRepository testIdentityRepository;
     private final StateTransitionLogRepository stateTransitionLogRepository;
     private final QuarantineRepository quarantineRepository;
+    private final NotificationService notificationService;
     @EventListener
     @Transactional
 
@@ -52,6 +53,7 @@ public class StateEvaluatorService {
             {
                 openQuarantine(testIdentity,"AUTO");
             }
+            notificationService.notifyStateChange(testIdentity,currentState,nextState);
         }
     }
 
