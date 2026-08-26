@@ -1,16 +1,29 @@
 package com.ftip.ftip.controller;
-import com.ftip.ftip.statemachine.InvalidStateTransitionException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import com.ftip.ftip.statemachine.InvalidStateTransitionException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<Map<String,Object>> handleOptimisticLock(ObjectOptimisticLockingFailureException ex)
+    {
+        Map<String,Object> body=new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", 409);
+        body.put("error", "Conflict");
+        body.put("message", "This test was updated by another request. Please retry.");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
         return buildResponse(HttpStatus.NOT_FOUND,ex.getMessage());
