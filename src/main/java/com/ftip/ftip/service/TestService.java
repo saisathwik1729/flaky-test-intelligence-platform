@@ -30,14 +30,17 @@ public class TestService
     private final TestRunRepository testRunRepository;
     private final StateTransitionLogRepository stateTransitionLogRepository;
     private final QuarantineRepository quarantineRepository;
+    @Transactional(readOnly = true)
     public List<TestIdentityResponse>getTestsByTeam(UUID teamId)
     {
         return testIdentityRepository.findByTeamId(teamId).stream().map(this::toResponse).collect(Collectors.toList());
     }
+    @Transactional(readOnly = true)
     public List<TestIdentityResponse>getTestsByState(TestState state)
     {
         return testIdentityRepository.findByCurrentState(state).stream().map(this::toResponse).collect(Collectors.toList());
     }
+    @Transactional(readOnly = true)
     public TestIdentityResponse getTestById(UUID id)
     {
         TestIdentity test=testIdentityRepository.findById(id).orElseThrow(()->new RuntimeException("Test not found: "+id));

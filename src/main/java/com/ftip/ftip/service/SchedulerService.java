@@ -1,4 +1,11 @@
 package com.ftip.ftip.service;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ftip.ftip.entity.Quarantine;
 import com.ftip.ftip.entity.StateTransitionLog;
 import com.ftip.ftip.entity.TestIdentity;
@@ -7,13 +14,9 @@ import com.ftip.ftip.repository.QuarantineRepository;
 import com.ftip.ftip.repository.StateTransitionLogRepository;
 import com.ftip.ftip.repository.TestIdentityRepository;
 import com.ftip.ftip.repository.TestRunRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
