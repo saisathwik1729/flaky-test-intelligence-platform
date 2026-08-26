@@ -1,14 +1,16 @@
 package com.ftip.ftip.service;
-import com.ftip.ftip.entity.DailyMetrics;
-import com.ftip.ftip.entity.TestRun;
-import com.ftip.ftip.event.TestRunProcessedEvent;
-import com.ftip.ftip.repository.DailyMetricsRepository;
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDate;
+
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import com.ftip.ftip.entity.DailyMetrics;
+import com.ftip.ftip.entity.TestRun;
+import com.ftip.ftip.event.TestRunProcessedEvent;
+import com.ftip.ftip.repository.DailyMetricsRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -30,9 +32,8 @@ public class MetricUpdaterService {
         metrics.setTotalRuns(metrics.getTotalRuns() + 1);
         if("FAIL".equals(testRun.getResult()))
         {
-            metrics.setTotalRuns(metrics.getTotalRuns() + 1);
-            double minutesWasted=testRun.getDurationMs()/60000.0;
-            metrics.setCiMinutesWasted(metrics.getCiMinutesWasted() + minutesWasted);
+            metrics.setTotalFailures(metrics.getTotalFailures() + 1);
+            metrics.setCiMinutesWasted(metrics.getCiMinutesWasted() + (testRun.getDurationMs()/60000.0));
         }
         dailyMetricsRepository.save(metrics);
     }

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 public class WebhookController {
     private final WebhookService webhookService;
     @PostMapping("/ci")
-    public ResponseEntity<String>receivedCiresults(@Valid @RequestBody WebhookPayloadRequest payload)
+    public ResponseEntity<String>receivedCiResults(@Valid @RequestBody WebhookPayloadRequest payload)
     {
         webhookService.processWebhook(payload);
         return ResponseEntity.ok("Test results processed successfully");

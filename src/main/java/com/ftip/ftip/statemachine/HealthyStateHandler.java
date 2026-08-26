@@ -1,12 +1,13 @@
 package com.ftip.ftip.statemachine;
+import com.ftip.ftip.entity.Team;
 import com.ftip.ftip.entity.TestState;
 
 
 public class HealthyStateHandler implements TestStateHandler{
     @Override
-    public TestState onNewScore(double newScore)
+    public TestState onNewScore(double newScore, Team policy)
     {
-        if(newScore>=49)
+        if(newScore>=policy.getSuspectThreshold())
         {
             return TestState.SUSPECT;
         }

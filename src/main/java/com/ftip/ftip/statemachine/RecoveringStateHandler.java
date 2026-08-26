@@ -1,9 +1,10 @@
 package com.ftip.ftip.statemachine;
+import com.ftip.ftip.entity.Team;
 import com.ftip.ftip.entity.TestState;
 
 public class RecoveringStateHandler implements TestStateHandler{
     @Override
-    public TestState onNewScore(double newScore)
+    public TestState onNewScore(double newScore, Team policy)
     {
         return TestState.RECOVERING;
     }

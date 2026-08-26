@@ -1,4 +1,12 @@
 package com.ftip.ftip.service;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ftip.ftip.dto.TestResultRequest;
 import com.ftip.ftip.dto.WebhookPayloadRequest;
 import com.ftip.ftip.entity.TestIdentity;
@@ -9,14 +17,8 @@ import com.ftip.ftip.repository.TeamRepository;
 import com.ftip.ftip.repository.TestIdentityRepository;
 import com.ftip.ftip.repository.TestRunRepository;
 import com.ftip.ftip.scoring.FlakinessScoringStrategy;
-import com.ftip.ftip.scoring.WeightedFlakinessScoringStrategy;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +30,7 @@ public class WebhookService {
     private final TestRunRepository testRunRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final RedisService redisService;
-    private final FlakinessScoringStrategy scoringStrategy=new WeightedFlakinessScoringStrategy();
+    private final FlakinessScoringStrategy scoringStrategy;
 
     @Transactional
     public void processWebhook(WebhookPayloadRequest payload) {
@@ -49,15 +51,23 @@ public class WebhookService {
         testRun.setEnvironment(payload.getEnvironment());
         testRunRepository.save(testRun);
 
-        redisService.invalidateTestRuns(testIdentity.getId());
-
         List<TestRun>recentRuns=redisService.getCachedTestRuns(testIdentity.getId());
 
         if(recentRuns==null)
         {
-            recentRuns=testRunRepository.findByTestIdentityIdAndRunAtAfterOrderByRunAtDesc(testIdentity.getId(),LocalDateTime.now().minusDays(30));
-            redisService.cacheTestRuns(testIdentity.getId(),recentRuns);
+            int windowDays=testIdentity.getTeam().getScoringWindowDays();
+            recentRuns=testRunRepository.findByTestIdentityIdAndRunAtAfterOrderByRunAtDesc(testIdentity.getId(),LocalDateTime.now().minusDays(windowDays));
         }
+        else
+        {
+            recentRuns=new ArrayList<>(recentRuns);
+            recentRuns.add(0,testRun);
+            if(recentRuns.size()>100)
+            {
+                recentRuns=new ArrayList<>(recentRuns.subList(0,100));
+            }
+        }
+        redisService.cacheTestRuns(testIdentity.getId(),recentRuns);
         double newScore=scoringStrategy.calculate(recentRuns);
         testIdentity.setFlakinessScore(newScore);
         testIdentity.setLastEvaluatedAt(LocalDateTime.now());

@@ -1,7 +1,11 @@
 package com.ftip.ftip.scoring;
-import com.ftip.ftip.entity.TestRun;
 import java.util.List;
 
+import org.springframework.stereotype.Component;
+
+import com.ftip.ftip.entity.TestRun;
+
+@Component
 public class WeightedFlakinessScoringStrategy implements FlakinessScoringStrategy {
     @Override
     public double calculate(List<TestRun> recentRuns) {
@@ -42,7 +46,7 @@ public class WeightedFlakinessScoringStrategy implements FlakinessScoringStrateg
         double totalWeight=0.0;
         for(int i=0; i<size; i++)
         {
-            double weight=(i+1);
+            double weight=(size-i);
             totalWeight+=weight;
             if("FAIL".equals(runs.get(i).getResult()))
             {

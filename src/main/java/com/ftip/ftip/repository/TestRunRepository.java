@@ -14,5 +14,5 @@ public interface TestRunRepository extends JpaRepository<TestRun, UUID> {
     List<TestRun>findByTestIdentityIdOrderByRunAtDesc(UUID testIdentityId);
     List<TestRun>findByTestIdentityIdAndRunAtAfterOrderByRunAtDesc(UUID testIdentityId, LocalDateTime after);
     @Query(value="SELECT result FROM test_run WHERE test_identity_id = :testId ORDER BY run_at DESC LIMIT :limit", nativeQuery=true)
-    List<Object[]>findRecentResultsForTest(@Param("testId")UUID testId, @Param("limit") int limit);
+        List<String> findRecentResultsForTest(@Param("testId")UUID testId, @Param("limit") int limit);
 }

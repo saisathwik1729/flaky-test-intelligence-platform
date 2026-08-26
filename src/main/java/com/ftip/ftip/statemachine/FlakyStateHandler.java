@@ -1,15 +1,15 @@
 package com.ftip.ftip.statemachine;
+import com.ftip.ftip.entity.Team;
 import com.ftip.ftip.entity.TestState;
-import org.aspectj.weaver.ast.Test;
 
 public class FlakyStateHandler implements TestStateHandler {
     @Override
-    public TestState onNewScore(double newScore) {
-        if(newScore>=85)
+    public TestState onNewScore(double newScore, Team policy) {
+        if(newScore>=policy.getAutoQuarantineThreshold())
         {
             return TestState.QUARANTINED;
         }
-        if(newScore<40)
+        if(newScore<policy.getSuspectThreshold())
         {
             return TestState.HEALTHY;
         }

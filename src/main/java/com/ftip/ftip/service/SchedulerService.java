@@ -44,9 +44,14 @@ public class SchedulerService {
             return;
         }
         int requiredStreak=test.getTeam().getRecoveryStreakRequired();
-        List<Object[]>recentResults=testRunRepository.findRecentResultsForTest(test.getId(),requiredStreak);
-        long passCount=recentResults.stream().filter(r->"PASS".equals(r[0])).count();
-        quarantine.setConsecutivePasses((int)passCount);
+        List<String> recentResults=testRunRepository.findRecentResultsForTest(test.getId(),requiredStreak);
+        int passCount=0;
+        for(String r:recentResults)
+        {
+            if("PASS".equals(r)) passCount++;
+            else break;
+        }
+        quarantine.setConsecutivePasses(passCount);
         if(passCount>=requiredStreak)
         {
             quarantine.setRecoveryStartedAt(LocalDateTime.now());

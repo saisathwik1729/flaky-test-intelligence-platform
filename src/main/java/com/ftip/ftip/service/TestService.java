@@ -1,23 +1,26 @@
 package com.ftip.ftip.service;
-import com.ftip.ftip.dto.StateTransitionResponse;
-import com.ftip.ftip.dto.TestIdentityResponse;
-import com.ftip.ftip.dto.TestRunResponse;
-import com.ftip.ftip.entity.TestIdentity;
-import com.ftip.ftip.entity.TestState;
-import com.ftip.ftip.repository.StateTransitionLogRepository;
-import com.ftip.ftip.repository.TestIdentityRepository;
-import com.ftip.ftip.repository.TestRunRepository;
-import com.ftip.ftip.statemachine.InvalidStateTransitionException;
-import com.ftip.ftip.statemachine.StateHandlerFactory;
-import com.ftip.ftip.entity.StateTransitionLog;
-import com.ftip.ftip.statemachine.TestStateHandler;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ftip.ftip.dto.StateTransitionResponse;
+import com.ftip.ftip.dto.TestIdentityResponse;
+import com.ftip.ftip.dto.TestRunResponse;
+import com.ftip.ftip.entity.Quarantine;
+import com.ftip.ftip.entity.StateTransitionLog;
+import com.ftip.ftip.entity.TestIdentity;
+import com.ftip.ftip.entity.TestState;
+import com.ftip.ftip.repository.QuarantineRepository;
+import com.ftip.ftip.repository.StateTransitionLogRepository;
+import com.ftip.ftip.repository.TestIdentityRepository;
+import com.ftip.ftip.repository.TestRunRepository;
+import com.ftip.ftip.statemachine.StateHandlerFactory;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +29,7 @@ public class TestService
     private final TestIdentityRepository testIdentityRepository;
     private final TestRunRepository testRunRepository;
     private final StateTransitionLogRepository stateTransitionLogRepository;
+    private final QuarantineRepository quarantineRepository;
     public List<TestIdentityResponse>getTestsByTeam(UUID teamId)
     {
         return testIdentityRepository.findByTeamId(teamId).stream().map(this::toResponse).collect(Collectors.toList());
@@ -75,7 +79,20 @@ public class TestService
         TestState nextState=StateHandlerFactory.getHandler(currentState).onManualQuarantine();
         logTransition(test,currentState,nextState,"Manual quarantine by admin","ADMIN");
         test.setCurrentState(nextState);
-        return toResponse(testIdentityRepository.save(test));
+        TestIdentityResponse response=toResponse(testIdentityRepository.save(test));
+
+        Quarantine quarantine=quarantineRepository
+                .findByTestIdentityId(test.getId())
+                .orElseGet(Quarantine::new);
+        quarantine.setTestIdentity(test);
+        quarantine.setQuarantinedAt(LocalDateTime.now());
+        quarantine.setQuarantinedBy("ADMIN");
+        quarantine.setConsecutivePasses(0);
+        quarantine.setRecoveryStartedAt(null);
+        quarantine.setRecoveredAt(null);
+        quarantineRepository.save(quarantine);
+
+        return response;
     }
     @Transactional
     public TestIdentityResponse approveRecovery(UUID testId)
@@ -85,6 +102,12 @@ public class TestService
         TestState nextState=StateHandlerFactory.getHandler(currentState).onOwnerApproval();
         logTransition(test,currentState,nextState,"Owner approved recovery","OWNER");
         test.setCurrentState(nextState);
+
+        quarantineRepository.findByTestIdentityId(test.getId()).ifPresent(q->{
+            q.setRecoveredAt(LocalDateTime.now());
+            quarantineRepository.save(q);
+        });
+
         return toResponse(testIdentityRepository.save(test));
     }
     private void logTransition(TestIdentity test, TestState from, TestState to, String reason, String triggeredBy)

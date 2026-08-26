@@ -1,8 +1,15 @@
 package com.ftip.ftip.entity;
-import jakarta.persistence.*;
-import lombok.Data;
 import java.time.LocalDate;
 import java.util.UUID;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import lombok.Data;
 
 @Entity
 @Table(name="team")
@@ -18,6 +25,9 @@ public class Team {
 
     @Column(name="repo_url")
     private String repoUrl;
+
+    @Column(name="suspect_threshold")
+    private int suspectThreshold=40;
 
     @Column(name="flakiness_threshold")
     private int flakinessThreshold=60;
