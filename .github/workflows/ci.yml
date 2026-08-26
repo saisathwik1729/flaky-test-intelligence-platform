@@ -1,0 +1,42 @@
+name: CI with FTIP
+
+on: [push, pull_request]
+
+env:
+  FTIP_URL: http://localhost:8080
+  FTIP_TEAM_ID: your-team-uuid-here
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Fetch quarantine list from FTIP
+        id: quarantine
+        run: |
+          EXCLUDED=$(curl -s "$FTIP_URL/api/tests/quarantined?teamId=$FTIP_TEAM_ID" \
+            | jq -r 'join(",")')
+          echo "excluded=$EXCLUDED" >> $GITHUB_OUTPUT
+          echo "Quarantined tests being skipped: $EXCLUDED"
+
+      - name: Run tests (excluding quarantined)
+        run: |
+          if [ -n "${{ steps.quarantine.outputs.excluded }}" ]; then
+            mvn test -Dtest="!${{ steps.quarantine.outputs.excluded }}"
+          else
+            mvn test
+          fi
+
+      - name: Report results to FTIP
+        if: always()
+        run: |
+          curl -X POST "$FTIP_URL/api/webhook/ci" \
+            -H "Content-Type: application/json" \
+            -d @test-results.json

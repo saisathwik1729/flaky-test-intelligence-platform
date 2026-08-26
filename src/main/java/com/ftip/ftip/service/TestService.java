@@ -31,6 +31,15 @@ public class TestService
     private final StateTransitionLogRepository stateTransitionLogRepository;
     private final QuarantineRepository quarantineRepository;
     @Transactional(readOnly = true)
+    public List<String> getQuarantinedTestNames(UUID teamId)
+    {
+        return testIdentityRepository
+                .findByTeamIdAndCurrentState(teamId, TestState.QUARANTINED)
+                .stream()
+                .map(TestIdentity::getTestName)
+                .collect(Collectors.toList());
+    }
+    @Transactional(readOnly = true)
     public List<TestIdentityResponse>getTestsByTeam(UUID teamId)
     {
         return testIdentityRepository.findByTeamId(teamId).stream().map(this::toResponse).collect(Collectors.toList());
