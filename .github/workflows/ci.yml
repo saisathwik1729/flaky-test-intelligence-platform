@@ -1,6 +1,8 @@
 name: CI with FTIP
 
-on: [push, pull_request]
+# Reference workflow — shows how a CI pipeline integrates with FTIP.
+# Not run automatically: FTIP_URL must point at a reachable FTIP instance.
+on: workflow_dispatch
 
 env:
   FTIP_URL: http://localhost:8080
